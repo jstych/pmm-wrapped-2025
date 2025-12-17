@@ -1,0 +1,797 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Team Wrapped 2025</title>
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+    
+    <script type="text/babel">
+        const { useState, useEffect, useCallback } = React;
+
+        // Animated counter hook
+        const useCounter = (end, duration = 2000, start = 0, shouldStart = false) => {
+          const [count, setCount] = useState(start);
+          
+          useEffect(() => {
+            if (!shouldStart) {
+              setCount(start);
+              return;
+            }
+            
+            let startTime = null;
+            const animate = (timestamp) => {
+              if (!startTime) startTime = timestamp;
+              const progress = Math.min((timestamp - startTime) / duration, 1);
+              const easeOut = 1 - Math.pow(1 - progress, 3);
+              setCount(Math.floor(start + (end - start) * easeOut));
+              
+              if (progress < 1) {
+                requestAnimationFrame(animate);
+              }
+            };
+            requestAnimationFrame(animate);
+          }, [end, duration, start, shouldStart]);
+          
+          return count;
+        };
+
+        // Snow particle component
+        const SnowParticles = () => {
+          const particles = Array.from({ length: 30 }, (_, i) => ({
+            id: i,
+            left: Math.random() * 100,
+            delay: Math.random() * 5,
+            duration: 8 + Math.random() * 6,
+            size: 2 + Math.random() * 4,
+            opacity: 0.3 + Math.random() * 0.4
+          }));
+
+          return (
+            <div className="fixed inset-0 pointer-events-none overflow-hidden z-0">
+              {particles.map((p) => (
+                <div
+                  key={p.id}
+                  className="absolute rounded-full bg-white"
+                  style={{
+                    left: `${p.left}%`,
+                    width: p.size,
+                    height: p.size,
+                    opacity: p.opacity,
+                    animation: `fall ${p.duration}s linear ${p.delay}s infinite`,
+                  }}
+                />
+              ))}
+              <style>{`
+                @keyframes fall {
+                  0% { transform: translateY(-20px) rotate(0deg); }
+                  100% { transform: translateY(100vh) rotate(360deg); }
+                }
+              `}</style>
+            </div>
+          );
+        };
+
+        // Sparkle effect
+        const Sparkles = ({ count = 8 }) => {
+          const sparkles = Array.from({ length: count }, (_, i) => ({
+            id: i,
+            top: Math.random() * 100,
+            left: Math.random() * 100,
+            delay: Math.random() * 3,
+            size: 4 + Math.random() * 8
+          }));
+
+          return (
+            <>
+              {sparkles.map((s) => (
+                <div
+                  key={s.id}
+                  className="absolute"
+                  style={{
+                    top: `${s.top}%`,
+                    left: `${s.left}%`,
+                    width: s.size,
+                    height: s.size,
+                    animation: `sparkle 2s ease-in-out ${s.delay}s infinite`,
+                  }}
+                >
+                  <div className="w-full h-full bg-amber-300 rounded-full opacity-60" 
+                       style={{ filter: 'blur(1px)', boxShadow: '0 0 10px 2px rgba(251, 191, 36, 0.5)' }} />
+                </div>
+              ))}
+              <style>{`
+                @keyframes sparkle {
+                  0%, 100% { opacity: 0.2; transform: scale(0.8); }
+                  50% { opacity: 0.8; transform: scale(1.2); }
+                }
+              `}</style>
+            </>
+          );
+        };
+
+        // Stat display with animated counter
+        const AnimatedStat = ({ value, label, suffix = '', shouldAnimate }) => {
+          const numericValue = typeof value === 'string' ? parseFloat(value.replace(/[^0-9.]/g, '')) : value;
+          const count = useCounter(numericValue, 1500, 0, shouldAnimate);
+          
+          const formatValue = (val) => {
+            if (suffix === '%') return `${val}%`;
+            if (suffix === 'k') return `${(val / 1000).toFixed(val >= 10000 ? 0 : 1)}k`;
+            if (suffix === 'M') return `${(val / 1000000).toFixed(1)}M`;
+            if (val >= 1000000) return `${(val / 1000000).toFixed(1)}M`;
+            if (val >= 1000) return val.toLocaleString();
+            return val;
+          };
+
+          return (
+            <div className="text-center">
+              <div className="text-5xl md:text-7xl font-black text-amber-300 mb-2" 
+                   style={{ textShadow: '0 0 30px rgba(251, 191, 36, 0.5)' }}>
+                {formatValue(count)}{suffix && !['k', 'M', '%'].includes(suffix) ? suffix : ''}
+              </div>
+              <div className="text-lg md:text-xl text-white/80 font-medium">{label}</div>
+            </div>
+          );
+        };
+
+        // Team member data
+        const teamData = [
+          {
+            name: "Carolina Foti",
+            firstName: "Carolina",
+            emoji: "✨",
+            gradient: "from-emerald-900 via-emerald-800 to-teal-900",
+            superlative: "Chief Narrative Architect",
+            tagline: "She repositioned an entire company around AI... and then wrote the keynote about it.",
+            altSuperlatives: [
+              { title: "The Story Whisperer", tagline: "She speaks fluent Wade." },
+              { title: "AI Oracle", tagline: "Saw the future before GPT even got ChatGPT." },
+              { title: "Keynote Queen", tagline: "If there's a stage, she's scripting it." },
+              { title: "Narrative Ninja", tagline: "Repositioned a company without anyone noticing until it was done." }
+            ],
+            projects: [
+              { name: "AI-First Repositioning", desc: "Shifted Zapier's entire narrative from 'all-in-one automation' to 'AI orchestration'" },
+              { name: "April 29th Launch Video", desc: "Delivered under impossible timelines with exec confidence" },
+              { name: "ZapConnect 2025 Keynote", desc: "Lead writer and story architect, featuring customers + Wade" },
+              { name: "AI Leaders Lab", desc: "Built an exec engagement program from scratch" },
+              { name: "AI Delegate Buyer Strategy", desc: "Defined our approach to a brand new persona" }
+            ],
+            stats: [
+              { value: 1, label: "Company Repositioned", suffix: "" },
+              { value: 1, label: "Keynote Scripted", suffix: "" },
+              { value: 100, label: "Exec Alignment", suffix: "%" }
+            ],
+            quotes: [
+              "Its 4 min but listen on 2x speed!!",
+              "Should we bring in comedians to punch up the script?"
+            ],
+            collaborators: ["Wade", "Geo", "Angela", "Kate", "Joe", "Charles", "Ryan A"],
+            thankYou: "Carolina, you didn't just tell Zapier's story this year—you rewrote it. Your ability to align execs, translate vision into narrative, and deliver under pressure made our biggest launches possible. Thank you for making us all look smarter. Here's to 2026. 🥂"
+          },
+          {
+            name: "Alex Misevski",
+            firstName: "Alex",
+            emoji: "🐯",
+            gradient: "from-orange-900 via-amber-900 to-yellow-900",
+            superlative: "Tiger Tamer",
+            tagline: "Led the Tiger Team to 96.5% of stretch goals. 3.5 campaigns per week. Demanding but supportive.",
+            altSuperlatives: [
+              { title: "Demo King", tagline: "Made the impossible look effortless—no small feat." },
+              { title: "Mr. Barely An Inconvenience", tagline: "Made everyone's ZapConnect talk super easy." },
+              { title: "ICP Architect", tagline: "Reviewed 800+ sales conversations. Identified 1,000 AI leaders. Got shared by Wade." },
+              { title: "The 96.5 Percenter", tagline: "Set stretch goals. Hit stretch goals. Simple as that." }
+            ],
+            projects: [
+              { name: "Tiger Team Leadership", desc: "96.5% of stretch WAU goal (14,412 WAUs), 3.5 campaign/week pace" },
+              { name: "ICP Refresh", desc: "Reviewed 800+ sales conversations, identified ~1,000 AI Transformation Leaders" },
+              { name: "ZapConnect Keynote Demos", desc: "Recorded countless demo screens that made the keynote shine" },
+              { name: "Product Portfolio Expansion", desc: "Doubled scope from 2 to 4 products, grew Chatbots signups 55%" },
+              { name: "AI Transformation Leaders Research", desc: "Conducted research that Wade shared in #general" }
+            ],
+            stats: [
+              { value: 96.5, label: "Stretch Target Achieved", suffix: "%" },
+              { value: 23178, label: "Chatbots Signups", suffix: "" },
+              { value: 800, label: "Sales Calls Reviewed", suffix: "+" },
+              { value: 1000, label: "AI Leaders Identified", suffix: "" }
+            ],
+            quotes: [
+              "Can confirm, @alex.misevski made my talk super easy, barely an inconvenience!",
+              "Demo king! You recorded countless demo screens and made them look equally authentic and professional."
+            ],
+            collaborators: ["Joe", "Kathy", "Steph", "Kevin Liu", "Lindsay", "Shira", "Ryan Q", "Data Team"],
+            thankYou: "Alex, you doubled your product scope and still hit 96.5% of stretch goals. You led the Tiger Team with a 'demanding but supportive' approach that lifted everyone's game. Your ICP work got shared by Wade. Your demos made the keynote shine. Thank you for an incredible year. 🐯"
+          },
+          {
+            name: "Charles Crawford",
+            firstName: "Charles",
+            emoji: "🔍",
+            gradient: "from-indigo-900 via-purple-900 to-violet-900",
+            superlative: "The Deal Detective",
+            tagline: "20+ deal maps. 200+ Gong calls. Stalked every AI Delegate on LinkedIn. All to answer: who are we actually winning?",
+            altSuperlatives: [
+              { title: "Pièce de Résistance PMM", tagline: "His H1 work was literally called this in his review." },
+              { title: "The Gap Filler", tagline: "CTO Craft deck? I got it. AR? I got it. Competitive? I got it." },
+              { title: "Lt. Cmdr. of GTM", tagline: "If Geordi La Forge did product marketing, he'd be Charles." },
+              { title: "Archetype Architect", tagline: "Turned messy deal data into a framework the whole org uses." }
+            ],
+            projects: [
+              { name: "ICP & Deal Archetype Analysis", desc: "Created 20+ deal maps, identified the 'AI Delegate' persona" },
+              { name: "Buyer Persona Framework", desc: "Built the Happy Path framework showing how enterprise deals close" },
+              { name: "CTO Craft Con Talk", desc: "Stepped up to lead content, drove 200 attendees and 169 leads" },
+              { name: "Analyst Relations", desc: "Took over AR, prepped Zapier for Gartner Magic Quadrant" },
+              { name: "Competitive Intelligence Program", desc: "Standing up battlecards and Crayon implementation" }
+            ],
+            stats: [
+              { value: 20, label: "Deal Maps Created", suffix: "+" },
+              { value: 200, label: "CTO Craft Attendees", suffix: "" },
+              { value: 169, label: "Leads Generated", suffix: "" },
+              { value: 1, label: "Pièce de Résistance", suffix: "" }
+            ],
+            quotes: [
+              "Major props to @CharlesC for doing the dirty work of listening to Gong calls, creating 20+ deal maps in Figma, and stalking all these people on LinkedIn to extract insights.",
+              "Possibly the best post yet, I'm cracking up 🖖"
+            ],
+            collaborators: ["Angela", "Joe", "Alex M", "Carolina", "Sales Team", "RevOps", "Chee"],
+            thankYou: "Charles, you did the work no one else wanted to do—and turned it into something the whole org now uses. Your deal mapping and persona work gave us the 'AI Delegate' language we now use everywhere. You stepped into gaps without being asked. Thank you for being the person who always raises their hand. 🖖"
+          },
+          {
+            name: "Jane Zhang",
+            firstName: "Jane",
+            emoji: "🚀",
+            gradient: "from-rose-900 via-red-900 to-pink-900",
+            superlative: "Miss 240%",
+            tagline: "Set a 5k webinar goal. Got 12k registrants. Drove 23.8 million AI tasks. The numbers don't lie.",
+            altSuperlatives: [
+              { title: "The AI Oracle", tagline: "MCP launched at the retreat. She had it in market before we got home." },
+              { title: "Agent Whisperer", tagline: "Repositioned Agents from chat-first to autonomous. Growth followed." },
+              { title: "Ship to Learn", tagline: "Her motto. Also how she made us Anthropic's featured partner." },
+              { title: "Same-Day Jane", tagline: "OpenAI launches Agent Builder. Jane ships messaging guide. Same day." }
+            ],
+            projects: [
+              { name: "AI Orchestration Launch", desc: "Drove record month: 23.8M AI tasks, positioned Zapier as AI orchestration leader" },
+              { name: "Agents Transformation", desc: "Repositioned to autonomous agents, drove $135k new ARR, 44k signups" },
+              { name: "MCP Go-to-Market", desc: "Shipped in days post-retreat, 507 new users, 264 new servers" },
+              { name: "AI Webinar", desc: "12k registrants on 5k goal (240%), ~$40k new ARR" },
+              { name: "OpenAI Agent Builder Response", desc: "Same-day messaging guide when OpenAI launched" }
+            ],
+            stats: [
+              { value: 23.8, label: "Million AI Tasks", suffix: "M" },
+              { value: 240, label: "Of Webinar Goal", suffix: "%" },
+              { value: 135000, label: "New ARR from Agents", suffix: "" },
+              { value: 44000, label: "New Agent Signups", suffix: "" }
+            ],
+            quotes: [
+              "OpenAI just launched Agent Builder today. Here's our public positioning:",
+              "I'm feeling ok about the keynote now that Jane stepped in to help fix the demo"
+            ],
+            collaborators: ["Joe", "Carolina", "Angela", "Candice", "Sheryl", "Product Team", "Influencer Network"],
+            thankYou: "Jane, you hit 240% of your webinar goal, drove our biggest AI month ever, turned Agents into a growth engine, and shipped MCP to market faster than anyone thought possible. When OpenAI dropped Agent Builder, you had our response ready same-day. You don't just ship fast—you ship smart. Thank you for making Zapier's AI story real. 🚀"
+          },
+          {
+            name: "Bryce Vernon",
+            firstName: "Bryce",
+            emoji: "🎬",
+            gradient: "from-purple-900 via-fuchsia-900 to-pink-900",
+            superlative: "The Hype Machine",
+            tagline: "16 videos. 4 hackathons. 75% win rate. He makes Zapier look easy—and fun.",
+            altSuperlatives: [
+              { title: "Mr. 75%", tagline: "Four hackathons, $135k in closed deals. Three out of four ain't bad—it's exceptional." },
+              { title: "Voice of the Product", tagline: "Someone literally said they wish they could hear his voice at the push of a button to hype them up every day." },
+              { title: "Use Case Alchemist", tagline: "He made our use cases actionable for customers. Templates went from nothing to something big." },
+              { title: "The Smooth Transition", tagline: "Switched teams mid-year without missing a beat. Didn't even flinch." }
+            ],
+            projects: [
+              { name: "AI Hackathons", desc: "Ran 4 enterprise hackathons with 75% win rate and $135k in directly attributable deals" },
+              { name: "Tiger Team Video Engine", desc: "Created 16 videos with 43.82% average view rate and 5.19% CTR, driving 96.5% of WAU goals" },
+              { name: "Arcade Library", desc: "Built 7 Arcades that drove 618 clicks directly into product" },
+              { name: "Biggest Webinar Ever", desc: "Videos got shoutouts in Zapier's largest webinar (11,906 registrants)" },
+              { name: "Customer Stories", desc: "Developed Big Brothers Big Sisters story; made templates that brought the platform story to life" }
+            ],
+            stats: [
+              { value: 75, label: "Hackathon Win Rate", suffix: "%" },
+              { value: 135000, label: "Deals from Hackathons", suffix: "" },
+              { value: 16, label: "Videos Produced", suffix: "" },
+              { value: 43.82, label: "Video View Rate", suffix: "%" }
+            ],
+            quotes: [
+              "He is absolutely crushing it with the video content. Amazing work sharing new functionality with customers in such an engaging way—it's incredibly impactful!",
+              "I wish I could just hear @Bryce's voice at the push of a button to hype me up every day"
+            ],
+            collaborators: ["Alex M", "Jane", "Steph", "Joe", "Ryan D", "Customer Advocacy", "Blog Team", "Brand Studio"],
+            thankYou: "Bryce, you make Zapier look good. Your hackathons closed $135k in deals. Your videos got shoutouts at our biggest webinar ever. And someone literally said they wish they could press a button to hear your voice hype them up. That's the energy you bring. Thank you for making our products feel exciting—and for making all of us better storytellers. 🎬"
+          }
+        ];
+
+        // Slide components
+        const TitleSlide = ({ visible }) => (
+          <div className={`absolute inset-0 flex flex-col items-center justify-center transition-all duration-700 
+                           ${visible ? 'opacity-100 scale-100' : 'opacity-0 scale-95 pointer-events-none'}`}>
+            <Sparkles count={12} />
+            <div className="text-center relative z-10">
+              <div className="text-2xl md:text-3xl text-amber-300 mb-4 animate-pulse">✨ 🎄 ✨</div>
+              <h1 className="text-5xl md:text-8xl font-black text-white mb-6"
+                  style={{ textShadow: '0 0 60px rgba(255,255,255,0.3)' }}>
+                2025
+              </h1>
+              <h2 className="text-3xl md:text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-amber-200 via-amber-300 to-amber-200 mb-4">
+                Product Marketing
+              </h2>
+              <h2 className="text-4xl md:text-6xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-amber-200 via-amber-300 to-amber-200 mb-8">
+                Team Wrapped
+              </h2>
+              <p className="text-xl md:text-2xl text-white/70 font-light">A celebration of an incredible year</p>
+              <div className="mt-12 text-white/50 animate-bounce">Click anywhere to begin →</div>
+            </div>
+          </div>
+        );
+
+        const NameSlide = ({ person, visible }) => (
+          <div className={`absolute inset-0 flex flex-col items-center justify-center transition-all duration-700 
+                           ${visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8 pointer-events-none'}`}>
+            <Sparkles count={8} />
+            <div className="text-center relative z-10">
+              <div className="text-6xl mb-6">{person.emoji}</div>
+              <h1 className="text-5xl md:text-7xl font-black text-white mb-4"
+                  style={{ textShadow: '0 0 40px rgba(255,255,255,0.3)' }}>
+                {person.name}
+              </h1>
+              <div className="text-2xl md:text-3xl text-amber-300 font-medium">2025 Wrapped</div>
+            </div>
+          </div>
+        );
+
+        const SuperlativeSlide = ({ person, visible }) => (
+          <div className={`absolute inset-0 flex flex-col items-center justify-center px-8 transition-all duration-700 
+                           ${visible ? 'opacity-100 scale-100' : 'opacity-0 scale-90 pointer-events-none'}`}>
+            <div className="text-center max-w-4xl relative z-10">
+              <div className="text-lg md:text-xl text-amber-300/80 uppercase tracking-widest mb-4">🏆 Primary Superlative</div>
+              <h1 className="text-5xl md:text-7xl font-black text-white mb-8"
+                  style={{ textShadow: '0 0 50px rgba(255,255,255,0.4)' }}>
+                {person.superlative}
+              </h1>
+              <p className="text-xl md:text-2xl text-white/80 italic leading-relaxed">
+                "{person.tagline}"
+              </p>
+            </div>
+          </div>
+        );
+
+        const AltSuperlativesSlide = ({ person, visible }) => (
+          <div className={`absolute inset-0 flex flex-col items-center justify-center px-8 transition-all duration-700 
+                           ${visible ? 'opacity-100 scale-100' : 'opacity-0 scale-90 pointer-events-none'}`}>
+            <div className="text-center max-w-5xl w-full relative z-10">
+              <div className="text-lg md:text-xl text-amber-300/80 uppercase tracking-widest mb-8">🎖️ Also Known As...</div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
+                {person.altSuperlatives.map((alt, idx) => (
+                  <div 
+                    key={idx}
+                    className={`bg-white/10 backdrop-blur-sm rounded-xl p-5 md:p-6 border border-white/10 text-left
+                               transition-all duration-500 ${visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}
+                    style={{ transitionDelay: `${idx * 100}ms` }}
+                  >
+                    <h3 className="text-xl md:text-2xl font-bold text-amber-300 mb-2">{alt.title}</h3>
+                    <p className="text-base md:text-lg text-white/70 italic">"{alt.tagline}"</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        );
+
+        const ProjectsSlide = ({ person, visible, subIndex }) => (
+          <div className={`absolute inset-0 flex flex-col items-center justify-center px-8 transition-all duration-700 
+                           ${visible ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
+            <div className="text-center max-w-4xl w-full relative z-10">
+              <div className="text-lg md:text-xl text-amber-300/80 uppercase tracking-widest mb-8">📋 Top Projects</div>
+              <div className="space-y-4">
+                {person.projects.slice(0, 5).map((project, idx) => (
+                  <div 
+                    key={idx}
+                    className={`transition-all duration-500 ${idx <= subIndex ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-8'}`}
+                    style={{ transitionDelay: `${idx * 100}ms` }}
+                  >
+                    <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 md:p-6 text-left border border-white/10">
+                      <h3 className="text-xl md:text-2xl font-bold text-white mb-2">{project.name}</h3>
+                      <p className="text-base md:text-lg text-white/70">{project.desc}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        );
+
+        const StatsSlide = ({ person, visible }) => (
+          <div className={`absolute inset-0 flex flex-col items-center justify-center px-8 transition-all duration-700 
+                           ${visible ? 'opacity-100 scale-100' : 'opacity-0 scale-95 pointer-events-none'}`}>
+            <div className="text-center max-w-5xl w-full relative z-10">
+              <div className="text-lg md:text-xl text-amber-300/80 uppercase tracking-widest mb-12">📊 By The Numbers</div>
+              <div className={`grid gap-8 md:gap-12 ${person.stats.length === 4 ? 'grid-cols-2 md:grid-cols-4' : 'grid-cols-1 md:grid-cols-3'}`}>
+                {person.stats.map((stat, idx) => (
+                  <AnimatedStat 
+                    key={idx} 
+                    value={stat.value} 
+                    label={stat.label} 
+                    suffix={stat.suffix}
+                    shouldAnimate={visible}
+                  />
+                ))}
+              </div>
+            </div>
+          </div>
+        );
+
+        const QuotesSlide = ({ person, visible }) => (
+          <div className={`absolute inset-0 flex flex-col items-center justify-center px-8 transition-all duration-700 
+                           ${visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8 pointer-events-none'}`}>
+            <div className="text-center max-w-4xl relative z-10">
+              <div className="text-lg md:text-xl text-amber-300/80 uppercase tracking-widest mb-12">💬 Signature Slack Energy</div>
+              <div className="space-y-8">
+                {person.quotes.map((quote, idx) => (
+                  <div 
+                    key={idx}
+                    className={`transition-all duration-700 ${visible ? 'opacity-100' : 'opacity-0'}`}
+                    style={{ transitionDelay: `${idx * 300}ms` }}
+                  >
+                    <blockquote className="text-2xl md:text-3xl text-white/90 italic leading-relaxed">
+                      "{quote}"
+                    </blockquote>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        );
+
+        const CollaboratorsSlide = ({ person, visible }) => (
+          <div className={`absolute inset-0 flex flex-col items-center justify-center px-8 transition-all duration-700 
+                           ${visible ? 'opacity-100 scale-100' : 'opacity-0 scale-95 pointer-events-none'}`}>
+            <div className="text-center max-w-4xl relative z-10">
+              <div className="text-lg md:text-xl text-amber-300/80 uppercase tracking-widest mb-8">🤝 Top Collaborators</div>
+              <div className="flex flex-wrap justify-center gap-3 md:gap-4">
+                {person.collaborators.map((collab, idx) => (
+                  <div 
+                    key={idx}
+                    className={`bg-white/10 backdrop-blur-sm px-5 py-3 rounded-full text-white text-lg md:text-xl font-medium
+                               border border-white/20 transition-all duration-500
+                               ${visible ? 'opacity-100 scale-100' : 'opacity-0 scale-75'}`}
+                    style={{ transitionDelay: `${idx * 80}ms` }}
+                  >
+                    {collab}
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        );
+
+        const ThankYouSlide = ({ person, visible }) => (
+          <div className={`absolute inset-0 flex flex-col items-center justify-center px-8 transition-all duration-700 
+                           ${visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8 pointer-events-none'}`}>
+            <Sparkles count={10} />
+            <div className="text-center max-w-3xl relative z-10">
+              <div className="text-lg md:text-xl text-amber-300/80 uppercase tracking-widest mb-8">💌 Thank You</div>
+              <div className="text-4xl md:text-5xl mb-8">{person.emoji}</div>
+              <p className="text-xl md:text-2xl text-white/90 leading-relaxed italic">
+                {person.thankYou}
+              </p>
+            </div>
+          </div>
+        );
+
+        const TransitionSlide = ({ visible, nextPerson }) => (
+          <div className={`absolute inset-0 flex flex-col items-center justify-center transition-all duration-700 
+                           ${visible ? 'opacity-100 scale-100' : 'opacity-0 scale-110 pointer-events-none'}`}>
+            <div className="text-center relative z-10">
+              <div className="text-4xl md:text-5xl text-white/30 mb-4">✨</div>
+              <div className="text-2xl md:text-3xl text-white/50">Up next...</div>
+              {nextPerson && (
+                <div className="mt-8 text-4xl md:text-5xl font-bold text-white">{nextPerson.name}</div>
+              )}
+            </div>
+          </div>
+        );
+
+        const EndSlide = ({ visible }) => (
+          <div className={`absolute inset-0 flex flex-col items-center justify-center transition-all duration-700 
+                           ${visible ? 'opacity-100 scale-100' : 'opacity-0 scale-95 pointer-events-none'}`}>
+            <Sparkles count={15} />
+            <div className="text-center relative z-10">
+              <div className="text-5xl md:text-6xl mb-8">🎄 ✨ 🥂</div>
+              <h1 className="text-5xl md:text-7xl font-black text-white mb-6"
+                  style={{ textShadow: '0 0 60px rgba(255,255,255,0.3)' }}>
+                Thank You, Team
+              </h1>
+              <p className="text-2xl md:text-3xl text-amber-300 mb-4">Here's to an amazing 2025</p>
+              <p className="text-xl md:text-2xl text-white/70">And an even better 2026 🚀</p>
+            </div>
+          </div>
+        );
+
+        // Top navigation component
+        const TopNav = ({ teamData, currentPersonIndex, onPersonClick, showNav }) => (
+          <div className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${showNav ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
+            <div className="flex justify-center items-center gap-2 md:gap-4 py-4 px-4 bg-gradient-to-b from-black/40 to-transparent">
+              <button
+                onClick={(e) => { e.stopPropagation(); onPersonClick(-1); }}
+                className={`px-3 py-2 rounded-full text-sm font-medium transition-all
+                           ${currentPersonIndex === -1 ? 'bg-amber-300 text-slate-900' : 'bg-white/10 text-white/70 hover:bg-white/20 hover:text-white'}`}
+              >
+                Intro
+              </button>
+              {teamData.map((person, idx) => (
+                <button
+                  key={idx}
+                  onClick={(e) => { e.stopPropagation(); onPersonClick(idx); }}
+                  className={`px-3 md:px-4 py-2 rounded-full text-sm font-medium transition-all flex items-center gap-2
+                             ${currentPersonIndex === idx ? 'bg-amber-300 text-slate-900' : 'bg-white/10 text-white/70 hover:bg-white/20 hover:text-white'}`}
+                >
+                  <span className="hidden md:inline">{person.emoji}</span>
+                  <span>{person.firstName}</span>
+                </button>
+              ))}
+              <button
+                onClick={(e) => { e.stopPropagation(); onPersonClick(teamData.length); }}
+                className={`px-3 py-2 rounded-full text-sm font-medium transition-all
+                           ${currentPersonIndex === teamData.length ? 'bg-amber-300 text-slate-900' : 'bg-white/10 text-white/70 hover:bg-white/20 hover:text-white'}`}
+              >
+                End
+              </button>
+            </div>
+          </div>
+        );
+
+        // Progress bar component (now clickable)
+        const ProgressBar = ({ current, total, onSlideClick }) => (
+          <div className="fixed bottom-8 left-1/2 -translate-x-1/2 flex gap-2 z-50 max-w-4xl flex-wrap justify-center px-4">
+            {Array.from({ length: total }, (_, i) => (
+              <button 
+                key={i}
+                onClick={(e) => { e.stopPropagation(); onSlideClick(i); }}
+                className={`h-2 rounded-full transition-all duration-300 hover:bg-amber-200 cursor-pointer ${
+                  i === current ? 'w-8 bg-amber-300' : i < current ? 'w-3 bg-white/50 hover:bg-white/70' : 'w-3 bg-white/20 hover:bg-white/40'
+                }`}
+              />
+            ))}
+          </div>
+        );
+
+        // Navigation hint
+        const NavHint = () => (
+          <div className="fixed bottom-8 right-8 text-white/30 text-sm z-50 hidden md:block">
+            ← → or click to navigate
+          </div>
+        );
+
+        // Main app
+        function TeamWrapped() {
+          const [slideIndex, setSlideIndex] = useState(0);
+          const [projectSubIndex, setProjectSubIndex] = useState(-1);
+          
+          // Slide structure: name, superlative, altSuperlatives, projects, stats, quotes, collaborators, thankyou
+          const slidesPerPerson = 8;
+          const totalSlides = 1 + (teamData.length * slidesPerPerson) + (teamData.length - 1) + 1;
+          
+          const getSlideInfo = (index) => {
+            if (index === 0) return { type: 'title', personIndex: -1 };
+            if (index === totalSlides - 1) return { type: 'end', personIndex: teamData.length };
+            
+            let adjustedIndex = index - 1;
+            let personIndex = 0;
+            
+            while (adjustedIndex >= slidesPerPerson + 1 && personIndex < teamData.length - 1) {
+              adjustedIndex -= (slidesPerPerson + 1);
+              personIndex++;
+            }
+            
+            if (adjustedIndex >= slidesPerPerson && personIndex < teamData.length - 1) {
+              return { type: 'transition', personIndex, nextPersonIndex: personIndex + 1 };
+            }
+            
+            const slideTypes = ['name', 'superlative', 'altSuperlatives', 'projects', 'stats', 'quotes', 'collaborators', 'thankyou'];
+            return { type: slideTypes[adjustedIndex] || 'name', personIndex };
+          };
+          
+          const getSlideIndexForPerson = (personIndex) => {
+            if (personIndex === -1) return 0; // Intro
+            if (personIndex === teamData.length) return totalSlides - 1; // End
+            
+            // Calculate first slide for this person
+            let slideIdx = 1; // After title
+            for (let i = 0; i < personIndex; i++) {
+              slideIdx += slidesPerPerson + 1; // slides + transition
+            }
+            return slideIdx;
+          };
+          
+          const currentSlide = getSlideInfo(slideIndex);
+          const currentPerson = currentSlide.personIndex !== undefined && currentSlide.personIndex >= 0 && currentSlide.personIndex < teamData.length 
+            ? teamData[currentSlide.personIndex] 
+            : null;
+          
+          // Determine current person index for top nav highlighting
+          const getCurrentPersonForNav = () => {
+            if (currentSlide.type === 'title') return -1;
+            if (currentSlide.type === 'end') return teamData.length;
+            if (currentSlide.type === 'transition') return currentSlide.personIndex;
+            return currentSlide.personIndex;
+          };
+          
+          // Handle project animation
+          useEffect(() => {
+            if (currentSlide.type === 'projects') {
+              setProjectSubIndex(-1);
+              const timer = setTimeout(() => {
+                const animate = (idx) => {
+                  if (idx < 5) {
+                    setProjectSubIndex(idx);
+                    setTimeout(() => animate(idx + 1), 150);
+                  }
+                };
+                animate(0);
+              }, 200);
+              return () => clearTimeout(timer);
+            }
+          }, [slideIndex, currentSlide.type]);
+          
+          const navigate = useCallback((direction) => {
+            setSlideIndex(prev => {
+              const next = prev + direction;
+              if (next < 0) return 0;
+              if (next >= totalSlides) return totalSlides - 1;
+              return next;
+            });
+          }, [totalSlides]);
+          
+          const jumpToSlide = useCallback((index) => {
+            if (index >= 0 && index < totalSlides) {
+              setSlideIndex(index);
+            }
+          }, [totalSlides]);
+          
+          const jumpToPerson = useCallback((personIndex) => {
+            const targetSlide = getSlideIndexForPerson(personIndex);
+            setSlideIndex(targetSlide);
+          }, []);
+          
+          useEffect(() => {
+            const handleKeyDown = (e) => {
+              if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'Enter') {
+                e.preventDefault();
+                navigate(1);
+              } else if (e.key === 'ArrowLeft') {
+                e.preventDefault();
+                navigate(-1);
+              }
+            };
+            
+            window.addEventListener('keydown', handleKeyDown);
+            return () => window.removeEventListener('keydown', handleKeyDown);
+          }, [navigate]);
+          
+          const getGradient = () => {
+            if (currentSlide.type === 'title' || currentSlide.type === 'end') {
+              return 'from-slate-900 via-emerald-950 to-slate-900';
+            }
+            if (currentSlide.type === 'transition') {
+              const nextPerson = teamData[currentSlide.nextPersonIndex];
+              return nextPerson?.gradient || 'from-slate-900 via-slate-800 to-slate-900';
+            }
+            return currentPerson?.gradient || 'from-slate-900 via-slate-800 to-slate-900';
+          };
+
+          return (
+            <div 
+              className={`min-h-screen bg-gradient-to-br ${getGradient()} transition-all duration-1000 cursor-pointer overflow-hidden relative`}
+              onClick={() => navigate(1)}
+            >
+              <SnowParticles />
+              
+              <TopNav 
+                teamData={teamData} 
+                currentPersonIndex={getCurrentPersonForNav()} 
+                onPersonClick={jumpToPerson}
+                showNav={true}
+              />
+              
+              <div className="relative w-full h-screen">
+                <TitleSlide visible={currentSlide.type === 'title'} />
+                
+                {teamData.map((person, pIdx) => (
+                  <React.Fragment key={pIdx}>
+                    <NameSlide 
+                      person={person} 
+                      visible={currentSlide.type === 'name' && currentSlide.personIndex === pIdx} 
+                    />
+                    <SuperlativeSlide 
+                      person={person} 
+                      visible={currentSlide.type === 'superlative' && currentSlide.personIndex === pIdx} 
+                    />
+                    <AltSuperlativesSlide
+                      person={person}
+                      visible={currentSlide.type === 'altSuperlatives' && currentSlide.personIndex === pIdx}
+                    />
+                    <ProjectsSlide 
+                      person={person} 
+                      visible={currentSlide.type === 'projects' && currentSlide.personIndex === pIdx}
+                      subIndex={projectSubIndex}
+                    />
+                    <StatsSlide 
+                      person={person} 
+                      visible={currentSlide.type === 'stats' && currentSlide.personIndex === pIdx} 
+                    />
+                    <QuotesSlide 
+                      person={person} 
+                      visible={currentSlide.type === 'quotes' && currentSlide.personIndex === pIdx} 
+                    />
+                    <CollaboratorsSlide 
+                      person={person} 
+                      visible={currentSlide.type === 'collaborators' && currentSlide.personIndex === pIdx} 
+                    />
+                    <ThankYouSlide 
+                      person={person} 
+                      visible={currentSlide.type === 'thankyou' && currentSlide.personIndex === pIdx} 
+                    />
+                    {pIdx < teamData.length - 1 && (
+                      <TransitionSlide 
+                        visible={currentSlide.type === 'transition' && currentSlide.personIndex === pIdx}
+                        nextPerson={teamData[pIdx + 1]}
+                      />
+                    )}
+                  </React.Fragment>
+                ))}
+                
+                <EndSlide visible={currentSlide.type === 'end'} />
+              </div>
+              
+              <ProgressBar current={slideIndex} total={totalSlides} onSlideClick={jumpToSlide} />
+              <NavHint />
+              
+              {/* Back button */}
+              {slideIndex > 0 && (
+                <button
+                  onClick={(e) => { e.stopPropagation(); navigate(-1); }}
+                  className="fixed left-8 top-1/2 -translate-y-1/2 text-white/30 hover:text-white/60 transition-colors z-50 p-4"
+                >
+                  <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                  </svg>
+                </button>
+              )}
+              
+              {/* Forward button */}
+              {slideIndex < totalSlides - 1 && (
+                <button
+                  onClick={(e) => { e.stopPropagation(); navigate(1); }}
+                  className="fixed right-8 top-1/2 -translate-y-1/2 text-white/30 hover:text-white/60 transition-colors z-50 p-4"
+                >
+                  <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                  </svg>
+                </button>
+              )}
+            </div>
+          );
+        }
+
+        // Render the app
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<TeamWrapped />);
+    </script>
+</body>
+</html>
+
